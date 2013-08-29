@@ -13,26 +13,23 @@
 volatile uint8_t samplesReadCounter = 0;
 volatile uint8_t channel = 0;
 
-uint8_t _idx;
-uint8_t _cnt;
-int _sum;
+uint8_t _gearPosIdx;
+uint8_t _gearPosCnt;
+uint16_t _gearPosSum;
+
+uint8_t _battIdx;
+uint8_t _battCnt;
+uint16_t _battSum;
 
 void ClearGearAverage()
 {
-	_cnt = 0;
-	_idx = 0;
-	_sum = 0;
+	_gearPosCnt = 0;
+	_gearPosIdx = 0;
+	_gearPosSum = 0;
 	for (int i=0; i< SAMPLE_SETS; i++) 
 		_gearSamples[i] = 0;
 }
-void AddValue(uint8_t newval)
-{
-	_sum -= _gearSamples[_idx];
-	_gearSamples[_idx] = newval;
-	_sum += _gearSamples[_idx];
-	_idx = (_idx + 1) % SAMPLE_SETS;
-	if (_cnt < SAMPLE_SETS) _cnt++;
-}
+
 
 //interrupt service routine for ADC
 // here we read the value as 8 bit precision and then copy that value to a memory location
@@ -45,7 +42,11 @@ ISR(ADC_vect)
 
 	if(channel == BATT_ADC_CH)
 	{
-		_battSamples[samplesReadCounter-1] = newestVal;
+      _battSum -= _battSamples[_battIdx];
+      _battSamples[_battIdx] = newestVal;
+      _battSum += _battSamples[_battIdx];
+      _battIdx = (_battIdx + 1) % SAMPLE_SETS;
+      if (_battCnt < SAMPLE_SETS) _battCnt++;
 	}
 	else
 	{
@@ -62,8 +63,12 @@ ISR(ADC_vect)
 			if ((currAvg > newestVal && (currAvg-newestVal) > MAX_GEAR_LEVEL_TRANSIENT) || 
 				(newestVal > currAvg && (newestVal-currAvg) > MAX_GEAR_LEVEL_TRANSIENT))
 				ClearGearAverage();
-			//_gearSamples[samplesReadCounter-1] = newestVal;				
-			AddValue(newestVal);
+						
+      _gearPosSum -= _gearSamples[_gearPosIdx];
+      _gearSamples[_gearPosIdx] = newestVal;
+      _gearPosSum += _gearSamples[_gearPosIdx];
+      _gearPosIdx = (_gearPosIdx + 1) % SAMPLE_SETS;
+      if (_gearPosCnt < SAMPLE_SETS) _gearPosCnt++;
 		}
 	}
 	
@@ -88,24 +93,12 @@ ISR(ADC_vect)
 
 uint8_t AverageBattVoltage()
 {
-	uint16_t total = 0;
-	for(int i = 0; i < SAMPLE_SETS; i++)
-	{
-		total += _battSamples[i];
-	}
-	uint8_t avg = (total/SAMPLE_SETS);
-	return avg;
+	if (_battCnt == 0) return 0;
+	return _battSum / _battCnt;
 }
 
 uint8_t AverageGearVoltage()
 {	
-	if (_cnt == 0) return 0;
-	return _sum / _cnt;
-	//uint16_t total = 0;
-	//for(int i = 0; i < SAMPLE_SETS; i++)
-	//{
-		//total += _gearSamples[i];
-	//}
-	//uint8_t avg = (total/SAMPLE_SETS);
-	//return avg;
+	if (_gearPosCnt == 0) return 0;
+	return _gearPosSum / _gearPosCnt;
 }
