@@ -119,24 +119,6 @@
     </ToolchainSettings>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="adc.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="adc.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="button.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="button.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="7seg.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="7seg.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="Main.c">
       <SubType>compile</SubType>
     </Compile>

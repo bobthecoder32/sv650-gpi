@@ -11,9 +11,39 @@
 #define F_CPU 1000000UL         /* 8MHz crystal oscillator / div8 */
 
 #include <stdint.h>       // needed for uint8_t
+#include <avr/io.h>
+#include <util/delay.h>
+#include <avr/interrupt.h>
+#include <avr/power.h>
 
-#define DELAY_MS 50
-#define MIN_TRANSIENTGEAR_INTERVAL 200UL
+
+#define BATT_ADC_CH 0   // use VCC for AREF, use ADC0 for input (PA0), MUX bit 0:0:0:0:0
+#define GEAR_ADC_CH 1	// use VCC for AREF, use ADC1 for input (PA1), MUX bit 0:0:0:0:0
+
+// defines the number of times to take a sampling of voltages from the GPS switch higher numbers increase accurancy at the expense of speed
+// both values must be powers of two
+#define SAMPLE_SETS 16 //avg this many samples together
+
+
+#define DISP_A_PORT		PORTB
+#define DISP_A_PIN		_BV(PB2)
+#define DISP_B_PORT		PORTA
+#define DISP_B_PIN		_BV(PA2)
+#define DISP_C_PORT		PORTA
+#define DISP_C_PIN		_BV(PA3)
+#define DISP_D_PORT		PORTA
+#define DISP_D_PIN		_BV(PA4)
+#define DISP_E_PORT		PORTA
+#define DISP_E_PIN		_BV(PA5)
+#define DISP_F_PORT		PORTA
+#define DISP_F_PIN		_BV(PA6)
+#define DISP_G_PORT		PORTA
+#define DISP_G_PIN		_BV(PA7)
+#define DISP_ALERT_PORT		PORTB
+#define DISP_ALERT_PIN		_BV(PB1)
+
+#define DELAY_MS 25
+#define GEAR_DEBOUNCE_MS 150UL
 
 /*
 voltage readings between first and second gear are very close, it would be easy to mistake one for the other thereby traveling directly
@@ -79,8 +109,6 @@ we can definitely tell this from background noise. We ensure that we always latc
 #define MAX_GEAR_LEVEL_TRANSIENT 20U
 // this is the minimum voltage signal required to make our software consider it a viable reading ~1.0v
 #define MIN_GEAR_LEVEL_THRESHOLD 51U
-
-uint32_t millis(void);
 
 #endif /* MAIN_H_ */
 
